@@ -63,6 +63,24 @@ export class AppController {
     return user;
   }
 
+  @Post('users')
+  async signupUser(
+      @Body() userData: { name: string; userType: $Enums.UserType; password: string },
+  ): Promise<UserModel> {
+    const where: Prisma.UserWhereUniqueInput = {name: userData.name};
+    const user = await this.userService.findUser(where)
+
+    if (user) {
+      throw new BadRequestException(`User with username ${userData.name} already exist.`)
+    }
+
+    try{
+      return await this.userService.createUser(userData);
+    } catch {
+      throw new BadRequestException("Failed to register user, missing name or password")
+    }
+  }
+
   @Put('users/:id')
   async updateUserById(
       @Param('id') id: string,
@@ -74,24 +92,6 @@ export class AppController {
       return await this.userService.updateUser({where, data});
     } catch {
       throw new BadRequestException("Failed to update user, ID is invalid.")
-    }
-  }
-
-  @Post('users')
-  async signupUser(
-      @Body() userData: { name: string; userType: $Enums.UserType; password: string },
-  ): Promise<UserModel> {
-      const where: Prisma.UserWhereUniqueInput = {name: userData.name};
-      const user = await this.userService.findUser(where)
-
-      if (user) {
-        throw new BadRequestException(`User with username ${userData.name} already exist.`)
-      }
-
-    try{
-      return await this.userService.createUser(userData);
-    } catch {
-      throw new BadRequestException("Failed to register user, missing name or password")
     }
   }
 
