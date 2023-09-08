@@ -44,6 +44,7 @@ More information can be seen in the [API Contract](https://docs.google.com/docum
 ### Authentication and Authorization
 - Authentication is done through the `/auth/login` endpoint. It will return a JWT token that will be used for authorization.
 - Authorization is done through the `AuthGuard` class. It will check if the user is logged in.
+- Passwords in the database are hashed using bcrypt.
 
 ### Money Collected for Supplier Pseudocode
 Let's assume that the `User` model has a new attribute `balance` that is of type float. This attribute will be used to store 
@@ -82,6 +83,14 @@ model Transaction {
 As a result, we can define a new API to create a transaction between a supplier and a retailer. This API will be called
 when a retailer pays for an order. The API will be `POST /transactions`. The body will contain the `from` and `to` user.
 The rest are auto generated.
+
+## Setup
+Create a PostgreSQL database with the name `user-management-system`.
+- username: postgres
+- password: password
+- host: localhost
+- port: 5432
+- database: user-management-system
 
 ## Installation
 
