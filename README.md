@@ -81,8 +81,43 @@ model Transaction {
 ```
 
 As a result, we can define a new API to create a transaction between a supplier and a retailer. This API will be called
-when a retailer pays for an order. The API will be `POST /transactions`. The body will contain the `from` and `to` user.
-The rest are auto generated.
+when a retailer pays for an order. The API will be `POST /transactions`. The body will contain the `from` and `to` user,
+as well as the amount of money `(balance)` to be transferred.
+
+Writing the service pseudocode, it will look something like this:
+```typescript
+async createTransction(from, to, amount) {
+//   Check if the user has enough balance
+//   If not, throw error Insufficient balance
+  if (from.balance < amount) {
+    throw new BadRequestException('Insufficient balance');
+  }
+  
+//   Create the transaction object
+  const transaction = await this.transactionService.create({data})
+  
+}
+
+// Then update the balance
+
+await this.userService.update({
+  where: {
+    id: from.id,
+  },
+  data: {
+    balance: from.balance - amount,
+  },
+});
+
+await this.userService.update({
+  where: {
+    id: to.id,
+  },
+  data: {
+    balance: to.balance + amount,
+  },
+});
+```
 
 ## Setup
 Create a PostgreSQL database with the name `user-management-system`.
