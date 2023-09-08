@@ -1,30 +1,87 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+## Project Structure
+There are 3 main modules in this project. However, app module is only boilerplate code. The modules that I'd like to 
+highlight are `auth` and `user` modules:
+- `auth` - module for authentication and authorization
+- `user` - module for user CRUD operations
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+### Auth module
+This module is responsible for authentication and authorization. It uses JWT for authentication.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- `auth.controller.ts` - endpoint for login `(POST /auth/login/)`.
+- `auth.service.ts` - logic for login and JWT generation.
+- `auth_dto.ts` - DTO for login and JWT generation.
+- `auth.entity.ts` - return response that contains the JWT token.
+- `auth.module.ts` - defines the auth module.
+- `auth.service.ts` - logic for login and JWT generation.
 
-## Description
+### User module
+This module is responsible for user CRUD operation.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- `user.controller.ts` - endpoints for user CRUD operations. There are 5 in total, will be in explained below
+- `user.service.ts` - logic for user CRUD operations.
+- `user.dto.ts` - DTO for user creation and update.
+- `user.module.ts` - defines the user module.
+
+## APIs
+For a more detailed information regarding the API contracts, please refer to this [Docs](https://docs.google.com/document/d/1LaubDj0Z_GmyfC2yw5vgKtbYZ39E1QMSVrj07jVII6k/edit?usp=sharing).
+
+## Additional Features
+### Validation and Error Handling
+- Validation is done using DTOs. DTOs are defined in the `dto` folder of each module.
+- APIs that require checking a user's existence such as delete, update, and get by id, will return a 400 Bad Request exception with a descriptive message.
+- Check to see if the data types passed in the body, params, or queries are correct.
+- If user is not logged in or does not provide a token, a 401 Unauthorized exception will be thrown.
+
+### Pagination and Filtering for GET /users
+This is done through the query parameters in the API. The following query parameters are supported:
+- `skip` - number of records to skip
+- `take` - number of records to take
+- `userType` - filter by user type
+- `orderBy` - order by a specific field.
+- `order` - order by ascending or descending.
+More information can be seen in the [API Contract](https://docs.google.com/document/d/1LaubDj0Z_GmyfC2yw5vgKtbYZ39E1QMSVrj07jVII6k/edit?usp=sharing).
+
+### Authentication and Authorization
+- Authentication is done through the `/auth/login` endpoint. It will return a JWT token that will be used for authorization.
+- Authorization is done through the `AuthGuard` class. It will check if the user is logged in.
+
+### Money Collected for Supplier Pseudocode
+Let's assume that the `User` model has a new attribute `balance` that is of type float. This attribute will be used to store 
+the balance of the user. 
+
+```prisma
+model User {
+  id        Int       @default(autoincrement()) @id
+  name      String    @unique
+  userType  UserType  @default(SUPPLIER)
+  createdAt DateTime  @default(now())
+  password  String
+  balance   Float     @default(0)
+}
+```
+
+The `balance` attribute will be updated every time a user pays for an order. For example, after
+a supplier successfully delivers an order.
+
+I like to keep things simple, so there won't be a new API if we want to check a user's balance. Simply, call the 
+`GET /users/:id` endpoint and it will return all the previous info + the user's balance. Because of this, we don't need
+to think about changing the service and API contract.
+
+On the other hand, if we want to add a transaction between a supplier and a customer, we can create a new model called
+`Transaction`. This model will have the following attributes:
+```prisma
+model Transaction {
+  id        Int       @default(autoincrement()) @id
+  createdAt DateTime  @default(now())
+  amount    Float
+  from      User      @relation("FromUser")
+  to        User      @relation("ToUser")
+}
+```
+
+As a result, we can define a new API to create a transaction between a supplier and a retailer. This API will be called
+when a retailer pays for an order. The API will be `POST /transactions`. The body will contain the `from` and `to` user.
+The rest are auto generated.
 
 ## Installation
 
@@ -57,17 +114,3 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
