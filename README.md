@@ -41,6 +41,8 @@ This is done through the query parameters in the API. The following query parame
 - `order` - order by ascending or descending.
 More information can be seen in the [API Contract](https://docs.google.com/document/d/1LaubDj0Z_GmyfC2yw5vgKtbYZ39E1QMSVrj07jVII6k/edit?usp=sharing).
 
+Note: when using the `orderBy` query parameter, don't forget to also use the `order` query parameter.
+
 ### Authentication and Authorization
 - Authentication is done through the `/auth/login` endpoint. It will return a JWT token that will be used for authorization.
 - Authorization is done through the `AuthGuard` class. It will check if the user is logged in.

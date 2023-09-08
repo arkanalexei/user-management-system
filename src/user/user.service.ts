@@ -57,11 +57,14 @@ export class UserService {
     }
 
     async createUser(userDTO: UserDTO): Promise<User> {
-        const where: Prisma.UserWhereUniqueInput = { name: userDTO.name };
-        const existingUser = await this.findUser(where);
-
+        const existingUser = await this.findUser({ name: userDTO.name });
         if (existingUser) {
             throw new BadRequestException(`User with username ${userDTO.name} already exists.`);
+        }
+
+        const isValidRole = this.checkRole(userDTO);
+        if (!isValidRole) {
+            throw new BadRequestException("Invalid user type provided.");
         }
 
         userDTO.password = await bcrypt.hash(userDTO.password, 10);
@@ -69,11 +72,19 @@ export class UserService {
     }
 
     async updateUser(id: number, userDTO: UserDTO): Promise<User> {
-        const user = await this.findUser({ id });
-
+        const user = await this.findUser({ id: id });
         if (!user) {
             throw new BadRequestException("Failed to update user, ID is invalid.")
+        }
 
+        const isValidRole = this.checkRole(userDTO);
+        if (!isValidRole) {
+            throw new BadRequestException("Invalid user type provided.");
+        }
+
+        const existingUser = await this.findUser({ name: userDTO.name });
+        if (existingUser && existingUser.id !== id) {
+            throw new BadRequestException(`User with username ${userDTO.name} already exists.`);
         }
 
         const where: Prisma.UserWhereUniqueInput = { id: Number(id) };
@@ -91,10 +102,8 @@ export class UserService {
 
     async deleteUser(id: number): Promise<User> {
         const user = await this.findUser({ id });
-
         if (!user) {
             throw new BadRequestException("Failed to update user, ID is invalid.")
-
         }
 
         const where: Prisma.UserWhereUniqueInput = { id: Number(id) };
@@ -107,5 +116,10 @@ export class UserService {
         return this.prisma.user.findFirst({
             where,
         });
+    }
+
+    checkRole(userDTO: UserDTO): boolean {
+        const validUserTypes = [UserType.SUPPLIER, UserType.RETAILER];
+        return validUserTypes.includes(userDTO.userType);
     }
 }
