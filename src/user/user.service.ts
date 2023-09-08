@@ -31,6 +31,7 @@ export class UserService {
         const { skip, take, userType, orderBy, order } = params;
         const where: Prisma.UserWhereInput = {};
 
+        // Check if userType is valid
         if (userType) {
             if (Object.values(UserType).includes(userType as UserType)) {
                 where.userType = userType as UserType;
